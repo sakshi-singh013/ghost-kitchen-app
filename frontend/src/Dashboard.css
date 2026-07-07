@@ -78,20 +78,44 @@ body{
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:10px;
+  margin-top:15px;
+  border-radius:10px;
+  overflow:hidden;
 }
 
 th,td{
-  padding:12px;
+  padding:14px 16px;
   text-align:left;
+  border-bottom:1px solid #334155;
 }
 
 th{
   background:#2563eb;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  color:#e0e7ff;
 }
 
-tr:nth-child(even){
-  background:#263548;
+td{
+  font-size:14px;
+  color:#cbd5e1;
+}
+
+tr:last-child td{
+  border-bottom:none;
+}
+
+tbody tr{
+  transition:background .15s ease;
+}
+
+tbody tr:nth-child(even){
+  background:#1a2536;
+}
+
+tbody tr:hover{
+  background:#2c3e5c;
 }
 
 input,
