@@ -301,6 +301,7 @@ const toggleCuisine = (name) => {
         {uploadMsg && <p style={{ marginTop: 12 }}>{uploadMsg}</p>}
       </div>
     </div>
+    </div>
   );
 }
 
