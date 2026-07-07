@@ -32,13 +32,13 @@ const [recommendations, setRecommendations] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    const res = await axios.get(`http://localhost:5000/api/search?q=${searchQuery}`);
+    const res = await axios.get(`https://ghost-kitchen-app.onrender.com/api/search?q=${searchQuery}`);
     setSearchResults(res.data);
   };
 
   const handleAskAI = async (e) => {
     e.preventDefault();
-    const res = await axios.post('http://localhost:5000/api/ai/recommend', { question: aiQuestion });
+    const res = await axios.post('https://ghost-kitchen-app.onrender.com/api/ai/recommend', { question: aiQuestion });
     setAiAnswer(res.data.recommendation);
   };
 
@@ -47,13 +47,13 @@ const [recommendations, setRecommendations] = useState(null);
   if (!uploadFile) return;
   const formData = new FormData();
   formData.append('file', uploadFile);
-  const res = await axios.post('http://localhost:5000/api/admin/upload-orders', formData);
+  const res = await axios.post('https://ghost-kitchen-app.onrender.com/api/admin/upload-orders', formData);
   setUploadMsg(res.data.message);
 };
 
 const handleRecommend = async (e) => {
   e.preventDefault();
-  const res = await axios.post('http://localhost:5000/api/recommend', {
+  const res = await axios.post('https://ghost-kitchen-app.onrender.com/api/recommend', {
     budget: Number(budget),
     cuisines: selectedCuisines,
     city: recCity || undefined,
@@ -70,10 +70,10 @@ const toggleCuisine = (name) => {
 
   useEffect(() => {
   Promise.all([
-    axios.get('http://localhost:5000/api/dashboard'),
-    axios.get('http://localhost:5000/api/cuisines'),
-    axios.get('http://localhost:5000/api/opportunity'),
-    axios.get('http://localhost:5000/api/meta')
+    axios.get('https://ghost-kitchen-app.onrender.com/api/dashboard'),
+    axios.get('https://ghost-kitchen-app.onrender.com/api/cuisines'),
+    axios.get('https://ghost-kitchen-app.onrender.com/api/opportunity'),
+    axios.get('https://ghost-kitchen-app.onrender.com/api/meta')
   ])
     .then(([dashRes, cuisineRes, oppRes, metaRes]) => {
       setDashboard(dashRes.data);
