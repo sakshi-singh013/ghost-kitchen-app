@@ -183,7 +183,7 @@ const toggleCuisine = (name) => {
     </div>
   )}
 </div>
-        <div className="cards">
+        <div className="stats-grid">
 
   <div className="card">
     <h3>💰 Total Revenue</h3>
