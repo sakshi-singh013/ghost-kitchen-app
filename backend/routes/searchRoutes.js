@@ -15,14 +15,16 @@ router.get('/search', async (req, res) => {
       'SELECT id, name FROM cuisines WHERE name LIKE ? LIMIT 10', [term]
     );
     const [restaurants] = await pool.query(
-      'SELECT id, name, rating FROM restaurants WHERE name LIKE ? LIMIT 10', [term]
+      `SELECT r.id, r.name, r.rating, l.area, l.city, cu.name AS cuisine
+       FROM restaurants r
+       JOIN locations l ON l.id = r.location_id
+       JOIN cuisines cu ON cu.id = r.cuisine_id
+       WHERE r.name LIKE ? OR l.area LIKE ? OR l.city LIKE ? OR cu.name LIKE ?
+       LIMIT 20`,
+      [term, term, term, term]
     );
 
-    res.json({
-      locations,
-      cuisines,
-      restaurants
-    });
+    res.json({ locations, cuisines, restaurants });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
