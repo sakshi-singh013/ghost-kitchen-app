@@ -25,20 +25,45 @@ function Register() {
 
   return (
     <div className="auth-page">
-      <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>Create Account</h1>
+      <div className="auth-card-solo">
+        <h1>Create account</h1>
+        <p className="auth-subtitle">Start exploring market insights for free</p>
+
         {error && <p className="error">{error}</p>}
-        <label>Name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} required />
+
+        <label>Full name</label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Pranav Singh"
+          required
+        />
+
         <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          placeholder="you@example.com"
+          required
+        />
+
         <label>Password</label>
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required minLength={6} />
-        <button type="submit">Register</button>
-        <p style={{ marginTop: 14, fontSize: 13 }}>
+        <input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type="password"
+          placeholder="At least 6 characters"
+          required
+          minLength={6}
+        />
+
+        <button type="submit" onClick={handleSubmit}>Create account</button>
+
+        <p className="auth-footer-text">
           Already have an account? <Link to="/login">Sign in</Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 }

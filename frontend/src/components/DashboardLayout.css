@@ -1,0 +1,25 @@
+.dash-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-page);
+}
+
+.dash-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-content {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}
+
+/* Mobile: full width since sidebar is hidden */
+@media (max-width: 900px) {
+  .dash-content {
+    padding: 20px 16px;
+  }
+}

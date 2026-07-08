@@ -6,26 +6,28 @@ import '../Login.css';
 
 function ResetPassword() {
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState(null);
   const [done, setDone] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get('token');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    if (password !== confirmPassword) {
+    if (password !== confirm) {
       setError('Passwords do not match');
       return;
     }
     try {
-      await axios.post('https://ghost-kitchen-app.onrender.com/api/auth/reset-password', { token, password });
+      await axios.post('https://ghost-kitchen-app.onrender.com/api/auth/reset-password', {
+        token: searchParams.get('token'),
+        password,
+      });
       setDone(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Reset failed. Link may have expired.');
+      setError(err.response?.data?.error || 'Reset failed');
     }
   };
 
@@ -33,36 +35,45 @@ function ResetPassword() {
     <div className="auth-page">
       <Toast message={error} type="error" onClose={() => setError(null)} />
 
-      <div className="auth-split">
+      <div className="auth-card-solo">
+        <h1>Choose a new password</h1>
+        <p className="auth-subtitle">Must be at least 6 characters</p>
 
-        <div className="auth-brand">
-          <div className="auth-brand-icon">🔥</div>
-          <h2>Ghost Kitchen</h2>
-          <p>Set a new password for your account.</p>
-        </div>
+        {done ? (
+          <div className="auth-success">
+            <div className="auth-success-icon">✓</div>
+            <h3>Password updated</h3>
+            <p>Redirecting you to sign in…</p>
+          </div>
+        ) : (
+          <>
+            <label>New password</label>
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              placeholder="••••••••"
+              required
+              minLength={6}
+            />
 
-        <form className="auth-card" onSubmit={handleSubmit}>
-          <h1>New password</h1>
+            <label>Confirm password</label>
+            <input
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              type="password"
+              placeholder="••••••••"
+              required
+              minLength={6}
+            />
 
-          {done ? (
-            <p className="auth-subtitle">Password updated! Redirecting to login...</p>
-          ) : (
-            <>
-              <label>New Password</label>
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+            <button type="submit" onClick={handleSubmit}>Update password</button>
+          </>
+        )}
 
-              <label>Confirm Password</label>
-              <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" required />
-
-              <button type="submit">Reset Password</button>
-            </>
-          )}
-
-          <p className="auth-footer-text">
-            <Link to="/login">Back to login</Link>
-          </p>
-        </form>
-
+        <p className="auth-footer-text">
+          <Link to="/login">← Back to sign in</Link>
+        </p>
       </div>
     </div>
   );
