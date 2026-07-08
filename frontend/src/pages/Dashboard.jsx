@@ -17,7 +17,7 @@ function formatINR(n) {
 function verdictBadge(v) {
   if (!v) return null;
   const lower = v.toLowerCase();
-  const cls = lower.includes('good') || lower.includes('great') || lower.includes('excellent')
+  const cls = lower.includes('recommend') || lower.includes('good') || lower.includes('great') || lower.includes('excellent')
     ? 'badge-green'
     : lower.includes('average') || lower.includes('moderate')
       ? 'badge-yellow'
@@ -291,12 +291,21 @@ function SearchPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Fetch the data and store the entire object
       const res = await axios.get(`${API}/search?q=${query}`);
       setResults(res.data);
+    } catch (err) {
+      console.error("Search failed:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Helper to check if the entire results object is completely empty
+  const hasNoResults = results && 
+    (!results.locations || results.locations.length === 0) &&
+    (!results.cuisines || results.cuisines.length === 0) &&
+    (!results.restaurants || results.restaurants.length === 0);
 
   return (
     <div className="panel" style={{ maxWidth: 720 }}>
@@ -312,37 +321,103 @@ function SearchPage() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. Koramangala, Burger, Mumbai…"
           />
-          <button className="btn-primary" type="submit" disabled={loading}>
+          <button className="btn-primary" type="submit" disabled={loading || !query.trim()}>
             {loading ? 'Searching…' : 'Search'}
           </button>
         </div>
       </form>
 
       {results && (
-        <div style={{ marginTop: 20 }}>
-          {Array.isArray(results) && results.length > 0 ? (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  {Object.keys(results[0]).map((k) => (
-                    <th key={k}>{k}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((row, i) => (
-                  <tr key={i}>
-                    {Object.values(row).map((v, j) => (
-                      <td key={j}>{String(v)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 12 }}>
+        <div style={{ marginTop: 24 }}>
+          {hasNoResults ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
               No results found for "{query}"
             </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              
+              {/* === RESTAURANTS TABLE === */}
+              {results.restaurants && results.restaurants.length > 0 && (
+                <div>
+                  <h4 style={{ marginBottom: 12, color: 'var(--text-primary)', fontSize: 14 }}>
+                    Restaurants ({results.restaurants.length})
+                  </h4>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {Object.keys(results.restaurants[0]).map((k) => (
+                          <th key={k} style={{ textTransform: 'capitalize' }}>{k}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.restaurants.map((row, i) => (
+                        <tr key={i}>
+                          {Object.values(row).map((v, j) => (
+                            <td key={j}>{String(v)}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* === LOCATIONS TABLE === */}
+              {results.locations && results.locations.length > 0 && (
+                <div>
+                  <h4 style={{ marginBottom: 12, color: 'var(--text-primary)', fontSize: 14 }}>
+                    Locations ({results.locations.length})
+                  </h4>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {Object.keys(results.locations[0]).map((k) => (
+                          <th key={k} style={{ textTransform: 'capitalize' }}>{k}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.locations.map((row, i) => (
+                        <tr key={i}>
+                          {Object.values(row).map((v, j) => (
+                            <td key={j}>{String(v)}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* === CUISINES TABLE === */}
+              {results.cuisines && results.cuisines.length > 0 && (
+                <div>
+                  <h4 style={{ marginBottom: 12, color: 'var(--text-primary)', fontSize: 14 }}>
+                    Cuisines ({results.cuisines.length})
+                  </h4>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {Object.keys(results.cuisines[0]).map((k) => (
+                          <th key={k} style={{ textTransform: 'capitalize' }}>{k}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.cuisines.map((row, i) => (
+                        <tr key={i}>
+                          {Object.values(row).map((v, j) => (
+                            <td key={j}>{String(v)}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+            </div>
           )}
         </div>
       )}
