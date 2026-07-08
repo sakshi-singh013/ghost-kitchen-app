@@ -28,15 +28,19 @@ function Login() {
       <Toast message={error} type="error" onClose={() => setError(null)} />
 
       <div className="auth-split">
-
         <div className="auth-brand">
-          <div className="auth-brand-icon">🔥</div>
-          <h2>Ghost Kitchen</h2>
-          <p>Find the best location, cuisine, and budget to launch your next cloud kitchen — backed by real market data.</p>
+          <div className="auth-brand-logo">
+            <div className="auth-brand-icon">🔥</div>
+            <span className="auth-brand-name">Ghost Kitchen</span>
+          </div>
+
+          <h2>Launch your next cloud kitchen with confidence</h2>
+          <p>Real market data to find the best location, cuisine, and budget before you invest a rupee.</p>
+
           <ul className="auth-brand-list">
-            <li>📊 Live revenue &amp; demand insights</li>
-            <li>📍 Location-based opportunity scoring</li>
-            <li>🤖 AI-powered recommendations</li>
+            <li>Live revenue and demand insights</li>
+            <li>Location-based opportunity scoring</li>
+            <li>AI-powered market recommendations</li>
           </ul>
         </div>
 
@@ -45,22 +49,33 @@ function Login() {
           <p className="auth-subtitle">Sign in to your dashboard</p>
 
           <label>Email</label>
-          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            placeholder="you@example.com"
+            required
+          />
 
           <label>Password</label>
-          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            placeholder="••••••••"
+            required
+          />
 
           <div className="auth-links-row">
             <Link to="/forgot-password">Forgot password?</Link>
           </div>
 
-          <button type="submit">Sign In</button>
+          <button type="submit">Sign in</button>
 
           <p className="auth-footer-text">
-            No account? <Link to="/register">Register</Link>
+            No account? <Link to="/register">Create one</Link>
           </p>
         </form>
-
       </div>
     </div>
   );
