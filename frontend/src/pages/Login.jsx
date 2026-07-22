@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import Toast from '../components/Toast';
+import PasswordInput from '../components/PasswordInput';
 import '../Login.css';
 
 function Login() {
@@ -14,7 +15,7 @@ function Login() {
     e.preventDefault();
     setError(null);
     try {
-      const res = await axios.post('https://ghost-kitchen-app.onrender.com/api/auth/login', { email, password });
+      const res = await axios.post('https://ghost-kitchen-backend-nuhi.onrender.com/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
@@ -58,10 +59,9 @@ function Login() {
           />
 
           <label>Password</label>
-          <input
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            type="password"
             placeholder="••••••••"
             required
           />

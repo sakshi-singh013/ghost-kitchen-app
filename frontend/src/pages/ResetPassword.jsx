@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Toast from '../components/Toast';
+import PasswordInput from '../components/PasswordInput';
 import '../Login.css';
 
 function ResetPassword() {
@@ -20,7 +21,7 @@ function ResetPassword() {
       return;
     }
     try {
-      await axios.post('https://ghost-kitchen-app.onrender.com/api/auth/reset-password', {
+      await axios.post('https://ghost-kitchen-backend-nuhi.onrender.com/api/auth/reset-password', {
         token: searchParams.get('token'),
         password,
       });
@@ -48,20 +49,18 @@ function ResetPassword() {
         ) : (
           <>
             <label>New password</label>
-            <input
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              type="password"
               placeholder="••••••••"
               required
               minLength={6}
             />
 
             <label>Confirm password</label>
-            <input
+            <PasswordInput
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              type="password"
               placeholder="••••••••"
               required
               minLength={6}

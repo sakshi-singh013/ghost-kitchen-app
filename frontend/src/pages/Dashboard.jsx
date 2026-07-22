@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import DashboardLayout from '../components/DashboardLayout';
 import '../Dashboard.css';
 
-const API = 'https://ghost-kitchen-app.onrender.com/api';
+const API = 'https://ghost-kitchen-backend-nuhi.onrender.com/api';
 
 /* ── helpers ─────────────────────────────────────────────── */
 function formatINR(n) {

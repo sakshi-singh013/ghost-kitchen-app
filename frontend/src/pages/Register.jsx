@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput';
 import '../Login.css';
 
 function Register() {
@@ -14,7 +15,7 @@ function Register() {
     e.preventDefault();
     setError(null);
     try {
-      const res = await axios.post('https://ghost-kitchen-app.onrender.com/api/auth/register', { name, email, password });
+      const res = await axios.post('https://ghost-kitchen-backend-nuhi.onrender.com/api/auth/register', { name, email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
@@ -35,7 +36,7 @@ function Register() {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Pranav Singh"
+          placeholder="Amara Okafor"
           required
         />
 
@@ -49,10 +50,9 @@ function Register() {
         />
 
         <label>Password</label>
-        <input
+        <PasswordInput
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          type="password"
           placeholder="At least 6 characters"
           required
           minLength={6}

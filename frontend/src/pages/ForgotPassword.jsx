@@ -13,7 +13,7 @@ function ForgotPassword() {
     e.preventDefault();
     setError(null);
     try {
-      await axios.post('https://ghost-kitchen-app.onrender.com/api/auth/forgot-password', { email });
+      await axios.post('https://ghost-kitchen-backend-nuhi.onrender.com/api/auth/forgot-password', { email });
       setSent(true);
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong');
