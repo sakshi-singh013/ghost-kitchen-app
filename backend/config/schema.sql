@@ -6,8 +6,16 @@ CREATE TABLE users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'owner'
+    role VARCHAR(20) DEFAULT 'owner',
+    reset_token_hash VARCHAR(255) DEFAULT NULL,
+    reset_token_expiry DATETIME DEFAULT NULL
 );
+
+-- If you already have a users table from before, run this instead of
+-- recreating it, so you don't lose existing data:
+-- ALTER TABLE users
+--   ADD COLUMN reset_token_hash VARCHAR(255) DEFAULT NULL,
+--   ADD COLUMN reset_token_expiry DATETIME DEFAULT NULL;
 
 CREATE TABLE locations (
     id INT AUTO_INCREMENT PRIMARY KEY,
