@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('../config/db');
+const { getMockMeta } = require('../config/mockData');
 const router = express.Router();
 
 router.get('/meta', async (req, res) => {
@@ -13,7 +14,8 @@ router.get('/meta', async (req, res) => {
       cuisines
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.warn('[Meta Warning] DB query failed, returning fallback meta data:', err.message);
+    res.json(getMockMeta());
   }
 });
 

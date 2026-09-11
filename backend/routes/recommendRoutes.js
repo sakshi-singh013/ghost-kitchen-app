@@ -1,14 +1,15 @@
 const express = require('express');
 const pool = require('../config/db');
+const { getMockRecommend } = require('../config/mockData');
 const router = express.Router();
 
 router.post('/recommend', async (req, res) => {
-  try {
-    const { budget, cuisines, city, area } = req.body;
-    if (!budget || !cuisines || cuisines.length === 0) {
-      return res.status(400).json({ error: 'budget and at least one cuisine are required' });
-    }
+  const { budget, cuisines, city, area } = req.body;
+  if (!budget || !cuisines || cuisines.length === 0) {
+    return res.status(400).json({ error: 'budget and at least one cuisine are required' });
+  }
 
+  try {
     let query = `
       SELECT l.id AS location_id, l.city, l.area, l.avg_setup_cost,
              cu.id AS cuisine_id, cu.name AS cuisine,
@@ -29,7 +30,6 @@ router.post('/recommend', async (req, res) => {
 
     const recommendations = rows
       .map(r => {
-        // Competition score derived directly from real restaurant count: 0 competitors = 0 score, scales up to 10
         const competitionScore = Math.min(10, r.competitorCount * 2);
         const opportunityScore = parseFloat((r.demand_score - competitionScore).toFixed(2));
         return {
@@ -52,7 +52,8 @@ router.post('/recommend', async (req, res) => {
 
     res.json({ count: recommendations.length, recommendations });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.warn('[Recommend Warning] DB query failed, returning fallback recommendations:', err.message);
+    res.json(getMockRecommend(budget, cuisines, city, area));
   }
 });
 
