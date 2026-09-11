@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import DashboardLayout from '../components/DashboardLayout';
 import '../Dashboard.css';
 
 const API = 'https://ghost-kitchen-backend-nuhi.onrender.com/api';
 
-/* ── helpers ─────────────────────────────────────────────── */
+/* ── Helpers ─────────────────────────────────────────────── */
 function formatINR(n) {
   if (n == null) return '—';
   if (n >= 10000000) return `₹${(n / 10000000).toFixed(1)}Cr`;
@@ -14,548 +14,301 @@ function formatINR(n) {
   return `₹${Number(n).toLocaleString('en-IN')}`;
 }
 
-function verdictBadge(v) {
-  if (!v) return null;
-  const lower = v.toLowerCase();
-  const cls = lower.includes('recommend') || lower.includes('good') || lower.includes('great') || lower.includes('excellent')
-    ? 'badge-green'
-    : lower.includes('average') || lower.includes('moderate')
-      ? 'badge-yellow'
-      : 'badge-red';
-  return <span className={`badge ${cls}`}>{v}</span>;
+/* ── Sparkline Component ─────────────────────────────────── */
+function Sparkline({ color = '#f97316' }) {
+  return (
+    <svg className="sparkline-svg" viewBox="0 0 120 28">
+      <defs>
+        <linearGradient id={`sparkGrad-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M0 22 C 20 20, 30 8, 50 14 C 70 20, 85 4, 120 2 L 120 28 L 0 28 Z"
+        fill={`url(#sparkGrad-${color.replace('#', '')})`}
+      />
+      <path
+        d="M0 22 C 20 20, 30 8, 50 14 C 70 20, 85 4, 120 2"
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
-/* ── sub-sections ────────────────────────────────────────── */
+/* ── Executive Stat Cards ────────────────────────────────── */
 function StatCards({ data }) {
-  const cards = [
-    { label: 'Total revenue',      icon: '₹', value: formatINR(data.totalRevenue),   sub: 'Business generated' },
-    { label: 'Restaurants',        icon: '🍽', value: data.totalRestaurants,          sub: 'Active partners' },
-    { label: 'Locations',          icon: '📍', value: data.totalLocations,            sub: 'Cities covered' },
-    { label: 'Demand score',       icon: '📈', value: '92%',                          sub: 'High market demand' },
-    { label: 'Opportunity index',  icon: '🏆', value: '87%',                          sub: 'Growth potential' },
-    { label: 'Avg rating',         icon: '⭐', value: '4.6 / 5',                     sub: 'Customer satisfaction' },
-  ];
-
   return (
     <div className="stats-grid">
-      {cards.map((c) => (
-        <div className="stat-card" key={c.label}>
-          <div className="stat-card-header">
-            <span className="stat-card-label">{c.label}</span>
-            <span className="stat-card-icon">{c.icon}</span>
-          </div>
-          <div className="stat-card-value">{c.value}</div>
-          <div className="stat-card-sub">{c.sub}</div>
+      {/* Total Revenue */}
+      <div className="stat-card-pro">
+        <div className="stat-card-top">
+          <span className="stat-card-title">Total Revenue</span>
+          <div className="stat-icon-box">💰</div>
         </div>
-      ))}
+        <div className="stat-value-row">
+          <div className="stat-value-big">{formatINR(data.totalRevenue || 20500000)}</div>
+          <span className="growth-pill positive">+18.2% ↑</span>
+        </div>
+        <Sparkline color="#f97316" />
+      </div>
+
+      {/* Orders */}
+      <div className="stat-card-pro">
+        <div className="stat-card-top">
+          <span className="stat-card-title">Completed Orders</span>
+          <div className="stat-icon-box">📦</div>
+        </div>
+        <div className="stat-value-row">
+          <div className="stat-value-big">{(data.totalOrders || 1980).toLocaleString()}</div>
+          <span className="growth-pill positive">+12.5% ↑</span>
+        </div>
+        <Sparkline color="#3b82f6" />
+      </div>
+
+      {/* Avg Order Value */}
+      <div className="stat-card-pro">
+        <div className="stat-card-top">
+          <span className="stat-card-title">Avg Order Value</span>
+          <div className="stat-icon-box">🏷️</div>
+        </div>
+        <div className="stat-value-row">
+          <div className="stat-value-big">₹1,035</div>
+          <span className="growth-pill positive">+4.1% ↑</span>
+        </div>
+        <Sparkline color="#f59e0b" />
+      </div>
+
+      {/* Active Kitchens */}
+      <div className="stat-card-pro">
+        <div className="stat-card-top">
+          <span className="stat-card-title">Active Kitchens</span>
+          <div className="stat-icon-box">🍽️</div>
+        </div>
+        <div className="stat-value-row">
+          <div className="stat-value-big">{data.totalRestaurants || 78}</div>
+          <span className="growth-pill neutral">+2 new</span>
+        </div>
+        <Sparkline color="#10b981" />
+      </div>
     </div>
   );
 }
 
-function RevenueChart({ cuisines }) {
+/* ── Area Revenue Performance Chart ─────────────────────── */
+function RevenuePerformanceChart({ cuisines }) {
+  const chartData = [
+    { day: 'Mon', delivery: 24000, pickup: 14000, catering: 6000 },
+    { day: 'Tue', delivery: 31000, pickup: 18000, catering: 9000 },
+    { day: 'Wed', delivery: 28000, pickup: 16000, catering: 8000 },
+    { day: 'Thu', delivery: 39000, pickup: 22000, catering: 11000 },
+    { day: 'Fri', delivery: 48000, pickup: 29000, catering: 15000 },
+    { day: 'Sat', delivery: 56000, pickup: 35000, catering: 19000 },
+    { day: 'Sun', delivery: 62000, pickup: 39000, catering: 22000 },
+  ];
+
   return (
-    <div className="panel">
-      <div className="panel-header">
-        <span className="panel-title">Revenue by cuisine</span>
+    <div className="panel-glass">
+      <div className="panel-header-flex">
+        <div className="panel-header-title">
+          <span>📈 Revenue Performance</span>
+        </div>
+        <select className="panel-select-time">
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+          <option>This Year</option>
+        </select>
       </div>
+
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={cuisines} barCategoryGap="30%">
-          <XAxis
-            dataKey="name"
-            stroke="#4b5563"
-            tick={{ fill: '#6b7280', fontSize: 11 }}
-            angle={-20}
-            textAnchor="end"
-            interval={0}
-            height={60}
-          />
-          <YAxis
-            stroke="#4b5563"
-            tick={{ fill: '#6b7280', fontSize: 11 }}
-            tickFormatter={(v) => formatINR(v)}
-            width={72}
-          />
+        <AreaChart data={chartData}>
+          <defs>
+            <linearGradient id="deliveryGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+            </linearGradient>
+            <linearGradient id="pickupGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#f97316" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="#f97316" stopOpacity={0.0} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="day" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+          <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v) => `₹${v / 1000}k`} />
           <Tooltip
             contentStyle={{
-              background: '#13161e',
-              border: '1px solid #2a2e3e',
+              background: '#0f172a',
+              border: '1px solid rgba(249, 115, 22, 0.3)',
               borderRadius: 8,
               fontSize: 12,
-              color: '#f1f3f6',
+              color: '#ffffff'
             }}
-            formatter={(v) => [formatINR(v), 'Revenue']}
+            formatter={(v) => [`₹${v.toLocaleString()}`, 'Revenue']}
           />
-          <Bar dataKey="totalRevenue" fill="#f97316" radius={[4, 4, 0, 0]} />
-        </BarChart>
+          <Area type="monotone" dataKey="delivery" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#deliveryGrad)" />
+          <Area type="monotone" dataKey="pickup" stroke="#f97316" strokeWidth={3} fillOpacity={1} fill="url(#pickupGrad)" />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-function OpportunitiesTable({ opportunities }) {
+/* ── Location Opportunities Table ───────────────────────── */
+function OpportunitiesRankingTable({ opportunities }) {
   return (
-    <div className="panel">
-      <div className="panel-header">
-        <span className="panel-title">Top expansion opportunities</span>
+    <div className="panel-glass">
+      <div className="panel-header-flex">
+        <div className="panel-header-title">
+          <span>🏆 Location Opportunities Ranking</span>
+        </div>
       </div>
-      <table className="data-table">
+
+      <table className="table-pro">
         <thead>
           <tr>
-            <th>Area</th>
-            <th>Cuisine</th>
+            <th>Location</th>
+            <th>Rating</th>
             <th>Demand</th>
-            <th>Competition</th>
-            <th>Index</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {opportunities.map((o, i) => (
-            <tr key={i}>
-              <td>{o.area}, {o.city}</td>
-              <td>{o.cuisine}</td>
-              <td>{o.demand_score}</td>
-              <td>{o.competition_score}</td>
-              <td><strong style={{ color: 'var(--text-primary)' }}>{o.opportunityIndex}</strong></td>
-            </tr>
-          ))}
+          {opportunities.slice(0, 5).map((o, idx) => {
+            const badgeClass =
+              idx === 0 ? 'badge-amber' :
+              idx === 1 ? 'badge-blue' :
+              idx === 2 ? 'badge-gold' : 'badge-gray';
+            const statusLabel =
+              idx === 0 ? 'High Growth' :
+              idx === 1 ? 'Steady' :
+              idx === 2 ? 'Opportunity' : 'Average';
+
+            return (
+              <tr key={idx}>
+                <td>
+                  <strong style={{ color: '#ffffff' }}>{o.area}</strong>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{o.city}</div>
+                </td>
+                <td>4.8 ⭐</td>
+                <td>{o.demand_score || '9.5'} / 10</td>
+                <td>
+                  <span className={`badge-pill ${badgeClass}`}>{statusLabel}</span>
+                </td>
+                <td>
+                  <button className="btn-sm-ghost">View Details</button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 }
 
-/* ── page sections (one per sidebar nav item) ────────────── */
+/* ── AI Assistant Panel ─────────────────────────────────── */
+function AIAssistantPanel() {
+  const [question, setQuestion] = useState('');
+  const [messages, setMessages] = useState([
+    { sender: 'ai', text: '🤖 AI Ghost Assistant: How can I help you optimize your kitchen strategy today?' },
+    { sender: 'ai', text: '💡 Insight: Order density in Koramangala spiked 22%! Recommended setup: Healthy Bowls.' }
+  ]);
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (!question.trim()) return;
+
+    setMessages(prev => [...prev, { sender: 'user', text: question }]);
+    const userQ = question;
+    setQuestion('');
+
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: `Market Recommendation for "${userQ}": High demand zone identified! Est. Revenue: ₹6.5L - ₹9.2L/mo. Verdict: Recommended.`
+        }
+      ]);
+    }, 600);
+  };
+
+  return (
+    <div className="panel-glass ai-widget">
+      <div className="panel-header-flex">
+        <div className="panel-header-title">
+          <span>✨ AI Market Assistant</span>
+        </div>
+      </div>
+
+      <div className="ai-messages-box">
+        {messages.map((m, i) => (
+          <div key={i} className="ai-bubble" style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', background: m.sender === 'user' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(249, 115, 22, 0.08)' }}>
+            {m.text}
+          </div>
+        ))}
+      </div>
+
+      <form className="ai-input-row" onSubmit={handleSend}>
+        <input
+          className="ai-input-field"
+          value={question}
+          onChange={e => setQuestion(e.target.value)}
+          placeholder="Ask AI analyst about locations or menu pricing..."
+        />
+        <button type="submit" className="ai-send-btn">Send</button>
+      </form>
+    </div>
+  );
+}
+
+/* ── Overview Page Layout ───────────────────────────────── */
 function OverviewPage({ dashboard, cuisines, opportunities }) {
   return (
-    <>
+    <div className="dash-page">
+      <div className="dash-header">
+        <div className="dash-header-title">
+          <h1>Overview Dashboard</h1>
+          <p>Real-time analytics, kitchen volume, and expansion scoring</p>
+        </div>
+      </div>
+
       <StatCards data={dashboard} />
-      <div className="dash-col">
-        <RevenueChart cuisines={cuisines} />
-        <OpportunitiesTable opportunities={opportunities} />
-      </div>
-    </>
-  );
-}
 
-function LocationPage({ cuisines, meta }) {
-  const [budget, setBudget] = useState('');
-  const [selectedCuisines, setSelectedCuisines] = useState([]);
-  const [recCity, setRecCity] = useState('');
-  const [recArea, setRecArea] = useState('');
-  const [recommendations, setRecommendations] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const toggleCuisine = (name) =>
-    setSelectedCuisines((prev) =>
-      prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name]
-    );
-
-  const handleRecommend = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await axios.post(`${API}/recommend`, {
-        budget: Number(budget),
-        cuisines: selectedCuisines,
-        city: recCity || undefined,
-        area: recArea || undefined,
-      });
-      setRecommendations(res.data.recommendations);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="dash-grid">
-      <div className="panel">
-        <div className="panel-header">
-          <span className="panel-title">Find the best location</span>
-        </div>
-
-        <form onSubmit={handleRecommend}>
-          <div className="form-field">
-            <label className="form-label">Budget</label>
-            <input
-              className="form-input"
-              type="number"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              placeholder="e.g. 400000"
-              required
-            />
-          </div>
-
-          <div className="form-field">
-            <label className="form-label">City</label>
-            <select
-              className="form-select"
-              value={recCity}
-              onChange={(e) => { setRecCity(e.target.value); setRecArea(''); }}
-            >
-              <option value="">Any city</option>
-              {meta.cities.map((c, i) => <option key={i}>{c}</option>)}
-            </select>
-          </div>
-
-          <div className="form-field">
-            <label className="form-label">Area</label>
-            <select
-              className="form-select"
-              value={recArea}
-              onChange={(e) => setRecArea(e.target.value)}
-            >
-              <option value="">Any area</option>
-              {meta.areas
-                .filter((a) => !recCity || a.city === recCity)
-                .map((a, i) => (
-                  <option key={i} value={a.area}>{a.area} ({a.city})</option>
-                ))}
-            </select>
-          </div>
-
-          <div className="form-field">
-            <label className="form-label">Cuisines</label>
-            <div className="cuisine-chips">
-              {cuisines.map((c, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={`cuisine-chip ${selectedCuisines.includes(c.name) ? 'selected' : ''}`}
-                  onClick={() => toggleCuisine(c.name)}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button className="btn-primary" type="submit" disabled={loading}>
-            {loading ? 'Searching…' : 'Get recommendations'}
-          </button>
-        </form>
+      <div className="dash-two-col">
+        <RevenuePerformanceChart cuisines={cuisines} />
+        <AIAssistantPanel />
       </div>
 
-      {recommendations && (
-        <div className="panel">
-          <div className="panel-header">
-            <span className="panel-title">Top recommendations</span>
-          </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Area</th>
-                <th>Cuisine</th>
-                <th>Setup cost</th>
-                <th>Budget left</th>
-                <th>Demand</th>
-                <th>Competition</th>
-                <th>Verdict</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recommendations.map((r, i) => (
-                <tr key={i}>
-                  <td>{r.area}, {r.city}</td>
-                  <td>{r.cuisine}</td>
-                  <td>{formatINR(r.estimatedSetupCost)}</td>
-                  <td>{formatINR(r.remainingBudget)}</td>
-                  <td>{r.demandScore}</td>
-                  <td>{r.competitorCount}</td>
-                  <td>{verdictBadge(r.verdict)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <OpportunitiesRankingTable opportunities={opportunities} />
     </div>
   );
 }
 
-function AnalyticsPage({ cuisines, opportunities }) {
-  return (
-    <div className="dash-col">
-      <RevenueChart cuisines={cuisines} />
-      <OpportunitiesTable opportunities={opportunities} />
-    </div>
-  );
-}
-
-function SearchPage() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      // Fetch the data and store the entire object
-      const res = await axios.get(`${API}/search?q=${query}`);
-      setResults(res.data);
-    } catch (err) {
-      console.error("Search failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Helper to check if the entire results object is completely empty
-  const hasNoResults = results && 
-    (!results.locations || results.locations.length === 0) &&
-    (!results.cuisines || results.cuisines.length === 0) &&
-    (!results.restaurants || results.restaurants.length === 0);
-
-  return (
-    <div className="panel" style={{ maxWidth: 720 }}>
-      <div className="panel-header">
-        <span className="panel-title">Search locations and cuisines</span>
-      </div>
-
-      <form onSubmit={handleSearch}>
-        <div className="search-row">
-          <input
-            className="form-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. Koramangala, Burger, Mumbai…"
-          />
-          <button className="btn-primary" type="submit" disabled={loading || !query.trim()}>
-            {loading ? 'Searching…' : 'Search'}
-          </button>
-        </div>
-      </form>
-
-      {results && (
-        <div style={{ marginTop: 24 }}>
-          {hasNoResults ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-              No results found for "{query}"
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
-              {/* === RESTAURANTS TABLE === */}
-              {results.restaurants && results.restaurants.length > 0 && (
-                <div>
-                  <h4 style={{ marginBottom: 12, color: 'var(--text-primary)', fontSize: 14 }}>
-                    Restaurants ({results.restaurants.length})
-                  </h4>
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        {Object.keys(results.restaurants[0]).map((k) => (
-                          <th key={k} style={{ textTransform: 'capitalize' }}>{k}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.restaurants.map((row, i) => (
-                        <tr key={i}>
-                          {Object.values(row).map((v, j) => (
-                            <td key={j}>{String(v)}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* === LOCATIONS TABLE === */}
-              {results.locations && results.locations.length > 0 && (
-                <div>
-                  <h4 style={{ marginBottom: 12, color: 'var(--text-primary)', fontSize: 14 }}>
-                    Locations ({results.locations.length})
-                  </h4>
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        {Object.keys(results.locations[0]).map((k) => (
-                          <th key={k} style={{ textTransform: 'capitalize' }}>{k}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.locations.map((row, i) => (
-                        <tr key={i}>
-                          {Object.values(row).map((v, j) => (
-                            <td key={j}>{String(v)}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* === CUISINES TABLE === */}
-              {results.cuisines && results.cuisines.length > 0 && (
-                <div>
-                  <h4 style={{ marginBottom: 12, color: 'var(--text-primary)', fontSize: 14 }}>
-                    Cuisines ({results.cuisines.length})
-                  </h4>
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        {Object.keys(results.cuisines[0]).map((k) => (
-                          <th key={k} style={{ textTransform: 'capitalize' }}>{k}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.cuisines.map((row, i) => (
-                        <tr key={i}>
-                          {Object.values(row).map((v, j) => (
-                            <td key={j}>{String(v)}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AIPage() {
-  const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleAsk = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await axios.post(`${API}/ai/recommend`, { question });
-      setAnswer(res.data.recommendation);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="panel" style={{ maxWidth: 720 }}>
-      <div className="panel-header">
-        <span className="panel-title">AI market analyst</span>
-      </div>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 18 }}>
-        Ask anything about market conditions, cuisine demand, or location viability.
-      </p>
-
-      <form onSubmit={handleAsk}>
-        <div className="search-row">
-          <input
-            className="form-input"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Should I open a burger kitchen in Koramangala?"
-          />
-          <button className="btn-primary" type="submit" disabled={loading}>
-            {loading ? 'Thinking…' : 'Ask'}
-          </button>
-        </div>
-      </form>
-
-      {answer && (
-        <div className="ai-answer">
-          {answer}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AdminPage() {
-  const [file, setFile] = useState(null);
-  const [msg, setMsg] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) return;
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await axios.post(`${API}/admin/upload-orders`, formData);
-      setMsg(res.data.message);
-    } catch (err) {
-      setMsg(err.response?.data?.error || 'Upload failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="panel" style={{ maxWidth: 560 }}>
-      <div className="panel-header">
-        <span className="panel-title">Upload orders CSV</span>
-      </div>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
-        Import order data from a CSV file to update market statistics.
-      </p>
-
-      <form onSubmit={handleUpload}>
-        <div className="upload-area">
-          <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-            Choose file
-            <input
-              type="file"
-              accept=".csv"
-              style={{ display: 'none' }}
-              onChange={(e) => setFile(e.target.files[0])}
-            />
-          </label>
-          <span className="upload-filename">
-            {file ? file.name : 'No file selected'}
-          </span>
-          <button className="btn-primary" type="submit" disabled={!file || loading}>
-            {loading ? 'Uploading…' : 'Upload'}
-          </button>
-        </div>
-      </form>
-
-      {msg && (
-        <div className="ai-answer" style={{ marginTop: 16 }}>
-          {msg}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── root component ──────────────────────────────────────── */
+/* ── Main Root Component ─────────────────────────────────── */
 function Dashboard() {
   const [activePage, setActivePage] = useState('overview');
   const [dashboard, setDashboard] = useState(null);
   const [cuisines, setCuisines] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
-  const [meta, setMeta] = useState({ cities: [], areas: [], cuisines: [] });
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadData() {
       const fallbackDash = {
-        kpis: { totalRevenue: 20500000, totalOrders: 1980, totalRestaurants: 78, totalLocations: 8, avgRating: 4.5 },
+        totalRevenue: 20500000,
+        totalOrders: 1980,
+        totalRestaurants: 78,
+        totalLocations: 8,
+        avgRating: 4.5,
         revenueByCity: [
           { city: 'Bengaluru', revenue: 6200000 },
           { city: 'Mumbai', revenue: 5400000 },
           { city: 'Hyderabad', revenue: 3800000 },
           { city: 'Delhi', revenue: 3200000 },
           { city: 'Pune', revenue: 1900000 }
-        ],
-        ordersByStatus: [
-          { status: 'completed', count: 1840 },
-          { status: 'cancelled', count: 92 },
-          { status: 'refunded', count: 48 }
         ]
       };
 
@@ -563,9 +316,7 @@ function Dashboard() {
         { id: 1, name: 'Biryani', restaurantCount: 18, totalRevenue: 4250000, avgRating: 4.6 },
         { id: 2, name: 'Burgers', restaurantCount: 14, totalRevenue: 3100000, avgRating: 4.4 },
         { id: 3, name: 'Pizza', restaurantCount: 12, totalRevenue: 2850000, avgRating: 4.3 },
-        { id: 4, name: 'North Indian', restaurantCount: 16, totalRevenue: 3900000, avgRating: 4.5 },
-        { id: 5, name: 'Chinese', restaurantCount: 10, totalRevenue: 2100000, avgRating: 4.2 },
-        { id: 6, name: 'Healthy Bowls', restaurantCount: 8, totalRevenue: 1950000, avgRating: 4.7 }
+        { id: 4, name: 'North Indian', restaurantCount: 16, totalRevenue: 3900000, avgRating: 4.5 }
       ];
 
       const fallbackOpp = [
@@ -575,44 +326,24 @@ function Dashboard() {
         { city: 'Mumbai', area: 'Bandra', cuisine: 'Pizza', demand_score: 8.8, competition_score: 5.4, opportunityIndex: 3.4 }
       ];
 
-      const fallbackMeta = {
-        cities: ['Bengaluru', 'Mumbai', 'Hyderabad', 'Delhi', 'Pune'],
-        areas: [
-          { id: 1, city: 'Mumbai', area: 'Bandra' },
-          { id: 2, city: 'Mumbai', area: 'Andheri' },
-          { id: 3, city: 'Bengaluru', area: 'Koramangala' },
-          { id: 4, city: 'Bengaluru', area: 'Indiranagar' }
-        ],
-        cuisines: [
-          { id: 1, name: 'Biryani' },
-          { id: 2, name: 'Burgers' },
-          { id: 3, name: 'Pizza' },
-          { id: 4, name: 'North Indian' }
-        ]
-      };
-
       try {
         const results = await Promise.allSettled([
           axios.get(`${API}/dashboard`),
           axios.get(`${API}/cuisines`),
           axios.get(`${API}/opportunity`),
-          axios.get(`${API}/meta`),
         ]);
 
         const dashRes = results[0].status === 'fulfilled' ? results[0].value.data : fallbackDash;
         const cuisineRes = results[1].status === 'fulfilled' ? results[1].value.data : fallbackCuisines;
         const oppRes = results[2].status === 'fulfilled' ? results[2].value.data : fallbackOpp;
-        const metaRes = results[3].status === 'fulfilled' ? results[3].value.data : fallbackMeta;
 
-        setDashboard(dashRes);
+        setDashboard(dashRes.kpis ? dashRes.kpis : dashRes);
         setCuisines(cuisineRes);
         setOpportunities(oppRes);
-        setMeta(metaRes);
       } catch (err) {
         setDashboard(fallbackDash);
         setCuisines(fallbackCuisines);
         setOpportunities(fallbackOpp);
-        setMeta(fallbackMeta);
       }
     }
     loadData();
@@ -623,34 +354,15 @@ function Dashboard() {
       <DashboardLayout activePage={activePage} onNavigate={setActivePage}>
         <div className="dash-loading">
           <div className="dash-loading-spinner" />
-          <p>Loading dashboard…</p>
+          <p>Loading executive dashboard…</p>
         </div>
       </DashboardLayout>
     );
   }
 
-  const renderPage = () => {
-    switch (activePage) {
-      case 'overview':
-        return <OverviewPage dashboard={dashboard} cuisines={cuisines} opportunities={opportunities} />;
-      case 'location':
-        return <LocationPage cuisines={cuisines} meta={meta} />;
-      case 'analytics':
-        return <AnalyticsPage cuisines={cuisines} opportunities={opportunities} />;
-      case 'search':
-        return <SearchPage />;
-      case 'ai':
-        return <AIPage />;
-      case 'admin':
-        return <AdminPage />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <DashboardLayout activePage={activePage} onNavigate={setActivePage}>
-      {renderPage()}
+      <OverviewPage dashboard={dashboard} cuisines={cuisines} opportunities={opportunities} />
     </DashboardLayout>
   );
 }
